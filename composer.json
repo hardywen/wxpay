@@ -1,6 +1,8 @@
 {
     "name": "hardywen/wxpay",
-    "description": "payment Weixin weixinPay",
+    "description": "微信支付 微信js支付 Weixin weixinPay",
+    "keywords": ["PHP","laravel","Laravel 4", "WeixinPay"],
+    "license": "MIT",
     "authors": [
         {
             "name": "HardyWen",
