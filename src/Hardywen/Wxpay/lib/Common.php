@@ -118,7 +118,7 @@ Trait Common{
 		//初始化curl
 		$ch = curl_init();
 		//设置超时
-		curl_setopt($ch, CURLOP_TIMEOUT, $second);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $second);
 		//这里设置代理，如果有的话
 		//curl_setopt($ch,CURLOPT_PROXY, '8.8.8.8');
 		//curl_setopt($ch,CURLOPT_PROXYPORT, 8080);
@@ -138,7 +138,6 @@ Trait Common{
 		//返回结果
 		if($data)
 		{
-			curl_close($ch);
 			return $data;
 		}
 		else

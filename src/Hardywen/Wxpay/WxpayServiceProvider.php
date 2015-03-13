@@ -1,6 +1,7 @@
 <?php namespace Hardywen\Wxpay;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 
 class WxpayServiceProvider extends ServiceProvider {
 
@@ -19,6 +20,7 @@ class WxpayServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->package('hardywen/wxpay');
+		View::addNamespace('wxpay', __DIR__.'/../../views');
 	}
 
 	/**

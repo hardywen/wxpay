@@ -1,12 +1,12 @@
 <?php namespace Hardywen\Wxpay\JsApi;
 
-use Hardywen\Wxpay\Base;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Hardywen\Wxpay\lib\Common;
 use Hardywen\Wxpay\lib\Client;
 use Hardywen\Wxpay\lib\UnifiedOrder;
 
-class JsApi  extends Base{
+class JsApi {
 
 	use Common, Client, UnifiedOrder;
 
@@ -25,24 +25,15 @@ class JsApi  extends Base{
 		//设置curl超时时间
 		$this->curl_timeout = $this->wxpay_config['curl_timeout'];
 
-		//=========步骤1：网页授权获取用户openid============
-		//通过code获得openid
-		if (!isset($_GET['code']))
-		{
-			//触发微信返回code码
-			$url = $this->createOauthUrlForCode($this->wxpay_config['js_api_call_url']);
-			Header("Location: $url");
-		}else
-		{
-			//获取code码，以获取openid
-			$code = $_GET['code'];
-			$this->setCode($code);
-			$this->getOpenId();
-		}
 	}
 
 
 	function pay(){
+			$this->getOpenid()->getPay();
+
+	}
+
+	function getPay(){
 		//设置统一支付接口参数
 		//设置必填参数
 		//appid已填,商户无需重复填写
@@ -50,24 +41,24 @@ class JsApi  extends Base{
 		//noncestr已填,商户无需重复填写
 		//spbill_create_ip已填,商户无需重复填写
 		//sign已填,商户无需重复填写
-		$this->setParameter("openid",$this->openid);//商品描述
-		$this->setParameter("body","贡献一分钱");//商品描述
+		$this->setParameter("openid", $this->openid);//商品描述
+		$this->setParameter("body", "贡献一分钱");//商品描述
 		//自定义订单号，此处仅作举例
 		$timeStamp = time();
-		$out_trade_no = $this->wxpay_config['appid']."$timeStamp";
+		$out_trade_no = $this->wxpay_config['appid'] . "$timeStamp";
 
-		$this->setParameter("out_trade_no","$out_trade_no");//商户订单号 
-		$this->setParameter("total_fee","1");//总金额
-		$this->setParameter("notify_url",$this->wxpay_config['notify_url']);//通知地址
-		$this->setParameter("trade_type","JSAPI");//交易类型
+		$this->setParameter("out_trade_no", "$out_trade_no");//商户订单号
+		$this->setParameter("total_fee", "1");//总金额
+		$this->setParameter("notify_url", $this->wxpay_config['notify_url']);//通知地址
+		$this->setParameter("trade_type", "JSAPI");//交易类型
 
 		//非必填参数，商户可根据实际情况选填
-		//$this->setParameter("sub_mch_id","XXXX");//子商户号  
-		//$this->setParameter("device_info","XXXX");//设备号 
-		//$this->setParameter("attach","XXXX");//附加数据 
+		//$this->setParameter("sub_mch_id","XXXX");//子商户号
+		//$this->setParameter("device_info","XXXX");//设备号
+		//$this->setParameter("attach","XXXX");//附加数据
 		//$this->setParameter("time_start","XXXX");//交易起始时间
-		//$this->setParameter("time_expire","XXXX");//交易结束时间 
-		//$this->setParameter("goods_tag","XXXX");//商品标记 
+		//$this->setParameter("time_expire","XXXX");//交易结束时间
+		//$this->setParameter("goods_tag","XXXX");//商品标记
 		//$this->setParameter("openid","XXXX");//用户标识
 		//$this->setParameter("product_id","XXXX");//商品ID
 
@@ -76,9 +67,8 @@ class JsApi  extends Base{
 		$this->setPrepayId($prepay_id);
 
 		$jsApiParameters = $this->getParameters();
-		//echo $jsApiParameters;
-
-		return View::make('hardywen/wxpay::view.pay',compact('jsApiParameters'));
+		//echo $jsApiParameters;exit;
+		return View::make('wxpay::pay',compact('jsApiParameters'))->render();
 	}
 	
 	
@@ -118,11 +108,23 @@ class JsApi  extends Base{
 	 */
 	function getOpenid()
 	{
+		if (!isset($_GET['code']))
+		{
+			//触发微信返回code码
+			$url = $this->createOauthUrlForCode($this->wxpay_config['js_api_call_url']);
+			Header("Location: $url");
+		}else
+		{
+			//获取code码，以获取openid
+			$code = $_GET['code'];
+			$this->setCode($code);
+		}
+
 		$url = $this->createOauthUrlForOpenid();
 		//初始化curl
 		$ch = curl_init();
 		//设置超时
-		curl_setopt($ch, CURLOP_TIMEOUT, $this->curl_timeout);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $this->curl_timeout);
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,FALSE);
 		curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,FALSE);
@@ -133,8 +135,11 @@ class JsApi  extends Base{
 		curl_close($ch);
 		//取出openid
 		$data = json_decode($res,true);
+		if(array_key_exists('errcode',$data)){
+			dd($data);
+		}
 		$this->openid = $data['openid'];
-		return $this->openid;
+		return $this;
 	}
 
 	/**

@@ -1,5 +1,6 @@
 <?php namespace Hardywen\Wxpay\lib;
 
+use Illuminate\Exception;
 
 Trait UnifiedOrder {
 
@@ -33,7 +34,7 @@ Trait UnifiedOrder {
 			$this->parameters["nonce_str"] = $this->createNoncestr();//随机字符串
 			$this->parameters["sign"] = $this->getSign($this->parameters);//签名
 			return  $this->arrayToXml($this->parameters);
-		}catch (\Exception $e)
+		}catch (Exception $e)
 		{
 			dd($e);
 		}
