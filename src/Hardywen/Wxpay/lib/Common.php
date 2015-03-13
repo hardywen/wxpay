@@ -21,8 +21,9 @@ Trait Common{
 	/**
 	 * 	作用：产生随机字符串，不长于32位
 	 */
-	public function createNoncestr( $length = 32 )
+	public function createNonceStr( $length = 32 )
 	{
+
 		$chars = "abcdefghijklmnopqrstuvwxyz0123456789";
 		$str ="";
 		for ( $i = 0; $i < $length; $i++ )  {
@@ -134,10 +135,10 @@ Trait Common{
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
 		//运行curl
 		$data = curl_exec($ch);
-		curl_close($ch);
 		//返回结果
 		if($data)
 		{
+			curl_close($ch);
 			return $data;
 		}
 		else

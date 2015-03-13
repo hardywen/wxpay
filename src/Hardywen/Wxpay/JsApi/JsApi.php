@@ -3,64 +3,91 @@
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Hardywen\Wxpay\lib\Common;
-use Hardywen\Wxpay\lib\Client;
 use Hardywen\Wxpay\lib\UnifiedOrder;
+use Hardywen\Wxpay\lib\Notify;
 
 class JsApi {
 
-	use Common, Client, UnifiedOrder;
+	use Common, UnifiedOrder, Notify;
 
 
-	var $wxpay_config;
+	var $wxpay_config  = [
+		'body' => '',
+		'total_fee' => '',
+		'out_trade_no' => '',
+		'sub_mch_id' => '',
+		'device_info' => '',
+		'attach' => '',
+		'time_start' => '',
+		'time_expire' => '',
+		'goods_tag' => '',
+		'product_id' => '',
+	];
 	var $url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
 	var $code;//code码，用以获取openid
 	var $openid;//用户的openid
-	var $parameters;//jsapi参数，格式为json
+	var $parameters;//jsApi参数，格式为json
 	var $prepay_id;//使用统一支付接口得到的预支付id
 	var $curl_timeout;//curl超时时间
 
 	function __construct($config)
 	{
-		$this->wxpay_config = $config;
+		$this->wxpay_config = $this->wxpay_config = array_merge($this->wxpay_config,$config);
+
 		//设置curl超时时间
 		$this->curl_timeout = $this->wxpay_config['curl_timeout'];
 
 	}
 
+	function setConfig($config){
+
+		$this->wxpay_config = array_merge($this->wxpay_config,$config);
+
+		return $this;
+	}
+
 
 	function pay(){
-			$this->getOpenid()->getPay();
+
+		$jsApiParameters = $this->getOpenid()->jsApiParameters();
+
+		die(View::make('wxpay::pay',compact('jsApiParameters'))->render());
+	}
+
+	function verifyNotify(){
+
+		$notify = $this->checkSign();
+
+		if($this->wxpay_config['log']){
+			$data = json_encode($this->getData());
+
+			\Log::info("===============WeiXin pay notify result==============:$notify. Data:$data");
+		}
+
+		return $notify;
 
 	}
 
-	function getPay(){
-		//设置统一支付接口参数
-		//设置必填参数
-		//appid已填,商户无需重复填写
-		//mch_id已填,商户无需重复填写
-		//noncestr已填,商户无需重复填写
-		//spbill_create_ip已填,商户无需重复填写
-		//sign已填,商户无需重复填写
-		$this->setParameter("openid", $this->openid);//商品描述
-		$this->setParameter("body", "贡献一分钱");//商品描述
-		//自定义订单号，此处仅作举例
-		$timeStamp = time();
-		$out_trade_no = $this->wxpay_config['appid'] . "$timeStamp";
+	function jsApiParameters(){
 
-		$this->setParameter("out_trade_no", "$out_trade_no");//商户订单号
-		$this->setParameter("total_fee", "1");//总金额
+		$this->setParameter("openid", $this->openid);//商品描述
 		$this->setParameter("notify_url", $this->wxpay_config['notify_url']);//通知地址
 		$this->setParameter("trade_type", "JSAPI");//交易类型
 
+		//订单相关
+		$this->setParameter("body", $this->wxpay_config['body']);//商品描述
+
+		$this->setParameter("out_trade_no", $this->wxpay_config['out_trade_no']);//商户订单号
+		$this->setParameter("total_fee", $this->wxpay_config['total_fee']);//总金额
+
 		//非必填参数，商户可根据实际情况选填
-		//$this->setParameter("sub_mch_id","XXXX");//子商户号
-		//$this->setParameter("device_info","XXXX");//设备号
-		//$this->setParameter("attach","XXXX");//附加数据
-		//$this->setParameter("time_start","XXXX");//交易起始时间
-		//$this->setParameter("time_expire","XXXX");//交易结束时间
-		//$this->setParameter("goods_tag","XXXX");//商品标记
-		//$this->setParameter("openid","XXXX");//用户标识
-		//$this->setParameter("product_id","XXXX");//商品ID
+		$this->setParameter("sub_mch_id",$this->wxpay_config['sub_mch_id']);//子商户号
+		$this->setParameter("device_info",$this->wxpay_config['device_info']);//设备号
+		$this->setParameter("attach",$this->wxpay_config['attach']);//附加数据
+		$this->setParameter("time_start",$this->wxpay_config['time_start']);//交易起始时间
+		$this->setParameter("time_expire",$this->wxpay_config['time_expire']);//交易结束时间
+		$this->setParameter("goods_tag",$this->wxpay_config['goods_tag']);//商品标记
+		$this->setParameter("product_id",$this->wxpay_config['product_id']);//商品ID
 
 		$prepay_id = $this->getPrepayId();
 
@@ -68,7 +95,7 @@ class JsApi {
 
 		$jsApiParameters = $this->getParameters();
 		//echo $jsApiParameters;exit;
-		return View::make('wxpay::pay',compact('jsApiParameters'))->render();
+		return $jsApiParameters;
 	}
 	
 	
@@ -78,7 +105,7 @@ class JsApi {
 	function createOauthUrlForCode($redirectUrl)
 	{
 		if($redirectUrl === ''){
-			$redirectUrl = URL::current();
+			$redirectUrl = \Request::url();
 		}
 		$urlObj["appid"] = $this->wxpay_config['appid'];
 		$urlObj["redirect_uri"] = "$redirectUrl";
@@ -133,12 +160,15 @@ class JsApi {
 		//运行curl，结果以jason形式返回
 		$res = curl_exec($ch);
 		curl_close($ch);
-		//取出openid
+
 		$data = json_decode($res,true);
+
 		if(array_key_exists('errcode',$data)){
 			dd($data);
 		}
-		$this->openid = $data['openid'];
+
+		$this->openid = $data["openid"];
+
 		return $this;
 	}
 
@@ -159,17 +189,19 @@ class JsApi {
 	}
 
 	/**
-	 * 	作用：设置jsapi的参数
+	 * 	作用：设置jsApi的参数
 	 */
 	public function getParameters()
 	{
 		$jsApiObj["appId"] = $this->wxpay_config['appid'];
 		$timeStamp = time();
 		$jsApiObj["timeStamp"] = "$timeStamp";
-		$jsApiObj["nonceStr"] = $this->createNoncestr();
+		$jsApiObj["nonceStr"] = $this->createNonceStr();
 		$jsApiObj["package"] = "prepay_id=$this->prepay_id";
 		$jsApiObj["signType"] = "MD5";
+
 		$jsApiObj["paySign"] = $this->getSign($jsApiObj);
+
 		$this->parameters = json_encode($jsApiObj);
 
 		return $this->parameters;

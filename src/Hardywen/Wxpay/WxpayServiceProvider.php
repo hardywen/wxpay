@@ -20,7 +20,6 @@ class WxpayServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->package('hardywen/wxpay');
-		View::addNamespace('wxpay', __DIR__.'/../../views');
 	}
 
 	/**
