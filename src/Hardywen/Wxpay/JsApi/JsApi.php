@@ -51,7 +51,7 @@ class JsApi {
 
 		$jsApiParameters = $this->getOpenid()->jsApiParameters();
 
-		die(View::make('wxpay::pay',compact('jsApiParameters'))->render());
+		return View::make('wxpay::pay',compact('jsApiParameters'))->render();
 	}
 
 	function verifyNotify(){

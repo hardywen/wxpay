@@ -14,17 +14,18 @@
             function(res){
               WeixinJSBridge.log(res.err_msg);
 
-              //alert(res.err_code+res.err_desc+res.err_msg);
 
               if(res.err_msg == 'get_brand_wcpay_request:ok'){
                 //redirect to xx page
-              }
-              if(res.err_msg == 'get_brand_wcpay_request:cancel'){
+              }else if(res.err_msg == 'get_brand_wcpay_request:cancel'){
                 //redirect to xx page
-              }
-              if(res.err_msg == 'get_brand_wcpay_request:fail'){
+              }else if(res.err_msg == 'get_brand_wcpay_request:fail'){
                 //redirect to xx page
+              }else{
+                alert(res.err_code+res.err_desc+res.err_msg);
               }
+
+              window.location.href = "<?php echo URL::route('orders'); ?>";
             }
         );
       }
