@@ -33,7 +33,7 @@ Trait UnifiedOrder {
 				throw new \Exception("统一支付接口中，缺少必填参数openid！trade_type为JSAPI时，openid为必填参数！"."<br>");
 			}
 			$this->parameters["appid"] = $this->wxpay_config['appid'];//公众账号ID
-			$this->parameters["mch_id"] = $this->wxpay_config['mchid'];//商户号
+			$this->parameters["mch_id"] = isset($this->wxpay_config['mch_id']) ? $this->wxpay_config['mch_id'] : $this->wxpay_config['mchid'];//商户号
 			$this->parameters["spbill_create_ip"] = $_SERVER['REMOTE_ADDR'];//终端ip
 			$this->parameters["nonce_str"] = $this->createNonceStr();//随机字符串
 			$this->parameters["sign"] = $this->getSign($this->parameters);//签名
