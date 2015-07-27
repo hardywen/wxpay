@@ -25,7 +25,7 @@
                 alert(res.err_code+res.err_desc+res.err_msg);
               }
 
-              window.location.href = "<?php echo URL::route('orders'); ?>";
+              window.location.href = "<?php echo $return_url ?>";
             }
         );
       }
