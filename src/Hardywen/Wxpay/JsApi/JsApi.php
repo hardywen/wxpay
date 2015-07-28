@@ -50,7 +50,7 @@ class JsApi {
 	function pay(){
 
 		$jsApiParameters = $this->getOpenid()->jsApiParameters();
-        $return_url = $this->wxpay_config['return_url'];
+        $return_url = $this->wxpay_config['call_back_url'];
 		return View::make('wxpay::pay',compact('jsApiParameters','return_url'))->render();
 	}
 

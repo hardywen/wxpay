@@ -58,16 +58,13 @@ WeiXin Payment
   if($notify){
     //业务逻辑
     
-    $wxpay->setReturnParameter("return_code","SUCCESS");//设置返回码
-    $wxpay->returnXml();
+    return 'success';
   }else{
     
     //业务逻辑
     
     
-	$wxpay->setReturnParameter("return_code","FAIL");//返回状态码
-	$wxpay->setReturnParameter("return_msg","签名失败");//返回信息
-	$wxpay->returnXml();
+	return 'fail';
   }
   
 ```
