@@ -139,7 +139,7 @@ class JsApi {
 		{
 			//触发微信返回code码
 			$url = $this->createOauthUrlForCode($this->wxpay_config['js_api_call_url']);
-			Header("Location: $url");
+			Header("Location: $url"); exit;
 		}else
 		{
 			//获取code码，以获取openid
