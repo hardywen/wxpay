@@ -164,7 +164,7 @@ class JsApi {
 		$data = json_decode($res,true);
 
 		if(array_key_exists('errcode',$data)){
-			dd($data);
+			throw new \Exception($data['errcode'] . '-' . $data['errmsg']);
 		}
 
 		$this->openid = $data["openid"];
